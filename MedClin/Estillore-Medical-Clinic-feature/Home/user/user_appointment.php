@@ -2,7 +2,7 @@
 require('../db.php');
 include('../auth_sesh.php');
 
-$current_date = date('Y-m-d');
+$current_date = date('Y-m-d\TH:i');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -43,7 +43,7 @@ $events = array();
 $patient_id = $_SESSION['patient_id'];
 
 // Modify the SQL query to retrieve appointments for the current patient
-$sql = "SELECT id, title, date FROM appointments WHERE fk_patient_id = '$patient_id'";
+$sql = "SELECT id, title, date FROM appointments WHERE fk_patient_id = '$patient_id'AND status <> 'pending'";
 
 $result = $conn->query($sql);
 
@@ -55,15 +55,14 @@ if ($result->num_rows > 0) {
 } else {
     echo "0 results";
 }
-
+// TITLE IS THE PATIENT NAME
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $date = $_POST['date'];
     $title = $_POST['title'];
-
     $parseDate = date('Y-m-d H:i:s', strtotime($date));
-    
+
     // Use the patient_id retrieved from the session to insert the appointment with a status of 'pending'
-    $sql = "INSERT INTO Appointments_Manager (appointment_date, patient_name, status, patient_id) VALUES ('$parseDate', '$title', 'pending',  $patient_id)";
+    $sql = "INSERT INTO appointments (date, title, status, fk_patient_id) VALUES ('$parseDate', '$title', 'pending',  $patient_id)";
 
     if ($conn->query($sql) == TRUE) {
         echo "New record created successfully";
@@ -73,6 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     header("Refresh:0");
 }
 ?>
+
 <body class="p-3 mb-2 text-white" id="body-pd" style="background-image: linear-gradient(to right, #c9fadc, #baf5e3, #aeefea, #a9e8ef, #a8e0f1, #a4dbf3, #a2d5f4, #a2cff4, #9bcaf7, #97c5fa, #94bffd, #94b9ff);">
     <header class="header bg-black" id="header" style="opacity:.8; height: 69px;">
         <div class="header_toggle"><i class='bx bx-menu' id="header-toggle"></i></div>
@@ -105,7 +105,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <span class="nav_name">History</span>
                     </a>
                 </div>
-            </div> <a href="logout.php" class="nav_link"> <i class='bx bx-log-out nav_icon'></i> <span class="nav_name">Sign Out</span> </a>
+            </div>
+                    <a href="../logout.php" class="nav_link">
+                         <i class='bx bx-log-out nav_icon'></i>
+                         <span class="nav_name">Sign Out</span>
+                     </a>
         </nav>
     </div>
     <!--Container Main start-->
@@ -120,7 +124,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <!-- Modal content -->
                     <div class="modal-content col-md-4 rounded">
                         <label class="text-dark">Select Appointment Date</label><br>
-                        <input type="date" name="date" value="<?php echo $current_date; ?>" min="<?php echo $current_date; ?>"><br>
+                        <input type="datetime-local" name="date" value="<?php echo $current_date; ?>" min="<?php echo $current_date; ?>"><br>
                         <label class="text-dark">Appointment Description</label><br>
                         <input type="text" name="title">
                         <br>
@@ -158,7 +162,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialDate: date,
-            initialView: 'timeGridWeek',
+            initialView: 'dayGridMonth',
             nowIndicator: true,
             headerToolbar: {
                 left: 'prev,next today',
