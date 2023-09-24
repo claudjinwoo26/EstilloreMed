@@ -1,8 +1,8 @@
 <?php
-    require('../db.php');
-    include('../auth_sesh.php');
+require('../db.php');
+include('../auth_sesh.php');
 
-$current_date = date('Y-m-d');
+$current_date = date('Y-m-d\TH:i');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -36,13 +36,13 @@ $conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
-
+// TITLE IS THE PATIENTS NAME/APPOINTMENT DESCRIPTION
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['appointment_id'])) {
         $appointment_id = $_POST['appointment_id'];
 
         // Update the status of the appointment to 'confirmed' when accepted
-        $update_sql = "UPDATE appointments SET status = 'confirmed' WHERE id = '$appointment_id'";
+        $update_sql = "UPDATE appointments SET status = 'approved' WHERE id = '$appointment_id'";
 
         if ($conn->query($update_sql) === TRUE) {
             echo "Appointment accepted successfully.";
@@ -55,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $parseDate = date('Y-m-d H:i:s', strtotime($date));
         $patient_id = $_SESSION['patient_id'];
         // Insert a new appointment with 'pending' status
-        $sql = "INSERT INTO appointments (title, date, status, fk_patient_id) VALUES ('$title', '$date', 'pending', $patient_id  )";
+        $sql = "INSERT INTO appointments (title, date, status, fk_patient_id) VALUES ('$title', '$date','approved', $patient_id  )";
 
         if ($conn->query($sql) === TRUE) {
             echo "New record created successfully";
@@ -66,19 +66,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 $events = array();
-
 // Retrieve pending appointments
-$sql = "SELECT id, title, date FROM appointments WHERE status = 'pending'";
+$sql = "SELECT id, title, date FROM appointments WHERE status = 'approved'";
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         array_push($events, $row);
     }
-  
 }
 // $conn->close();
 ?>
+
 <body class="p-3 mb-2 text-white" id="body-pd" style="background-image: linear-gradient(to right, #c9fadc, #baf5e3, #aeefea, #a9e8ef, #a8e0f1, #a4dbf3, #a2d5f4, #a2cff4, #9bcaf7, #97c5fa, #94bffd, #94b9ff);">
     <header class="header bg-black" id="header" style="opacity:.2; height: 69px;">
         <div class="header_toggle"><i class='bx bx-menu' id="header-toggle"></i></div>
@@ -115,7 +114,11 @@ if ($result->num_rows > 0) {
                         <span class="nav_name">Reports</span>
                     </a>
                 </div>
-                </div> <a href="logout.php" class="nav_link"> <i class='bx bx-log-out nav_icon'></i> <span class="nav_name">Sign Out</span> </a>
+            </div>
+            <a href="../logout.php" class="nav_link">
+                <i class='bx bx-log-out nav_icon'></i>
+                <span class="nav_name">Sign Out</span>
+            </a>
         </nav>
     </div>
     <!--Container Main start-->
@@ -123,18 +126,22 @@ if ($result->num_rows > 0) {
         <div class="col-md-10 float">
             <!-- The Button to set appointment -->
             <h1 style="color: #212584; margin-left:7.5%; margin-top:60px">Calendar</h1>
-            <button class="btn btn-dark rounded" type="button" style="margin-left:20px; margin-top:10px; margin-right:10px; margin-left:7.5%" name="addAppointment" id="myBtn" onclick="appointment()">+ Add appointment</button>
-            <a class="btn btn-dark rounded" style="margin-left: 20px; margin-top: 10px; margin-right: 10px; margin-left: 7.5%" href="appointment_manager.php">Appointment Manager</a>
+            <button class="btn btn-primary rounded" type="button" style="margin-left:20px; margin-top:10px; margin-left:7.5%" name="addAppointment" id="myBtn" onclick="appointment()">+ Add appointment</button>
+            <a class="btn btn-primary rounded" style="margin-top: 10px; margin-left: 0%" href="appointment_manager.php">Appointment Manager</a>
 
             <!-- The Modal -->
             <div id="myModal" class="modal">
                 <form action="calendar.php" method="post">
                     <!-- Modal content -->
                     <div class="modal-content col-md-4 rounded">
-                        <label class ="text-dark" >Select Appointment Date</label><br>
-                        <input type="date" name="date" value="<?php echo $current_date;?>" min="<?php echo $current_date;?>"><br>
-                        <label class ="text-dark">Appointment Description</label><br>
+                        <label class="text-dark">Select Appointment Date</label><br>
+                        <input type="datetime-local" name="date" value="<?php echo $current_date; ?>" min="<?php echo $current_date; ?>"><br>
+                        <label class="text-dark">Appointment Description</label><br>
                         <input type="text" name="title">
+                        <!-- <label class="text-dark">Appointment Time</label><br>
+                        <input type="time" name="time"> -->
+                        <?php
+                        ?>
                         <br>
                         <button class="btn btn-dark rounded" type="submit">Confirm Appointment</button>
                     </div>
@@ -170,7 +177,7 @@ if ($result->num_rows > 0) {
 
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialDate: date,
-            initialView: 'timeGridWeek',
+            initialView: 'dayGridMonth',
             nowIndicator: true,
             headerToolbar: {
                 left: 'prev,next today',
