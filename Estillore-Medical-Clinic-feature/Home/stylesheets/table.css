@@ -1,0 +1,21 @@
+table{
+    margin: 0 auto;
+    font-size: medium;
+    border: 1px solid black;
+}
+table,
+table td {
+  border: 1px solid #cccccc;
+}
+
+td , tr{
+  height: 50px;
+  width: 160px;
+  text-align: center;
+  vertical-align: middle;
+}
+th{
+  position: sticky;
+  top: 0;
+}
+.hidden-column {display: none;}
